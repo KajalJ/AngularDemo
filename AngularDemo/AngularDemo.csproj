@@ -71,8 +71,12 @@
     <Content Include="dodecahedron2_thumb.jpg" />
     <Content Include="dodecahedron_thumb.png" />
     <Content Include="packages.config" />
+    <Content Include="product-details.html" />
+    <Content Include="product-panels.html" />
+    <Content Include="product.js" />
     <Content Include="Scripts\angular.min.js.map" />
     <Content Include="Scripts\jquery-1.9.1.min.map" />
+    <Content Include="products.json" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>
