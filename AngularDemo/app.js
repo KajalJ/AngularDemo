@@ -4,7 +4,7 @@
       var store = this;
       store.products = [];
 
-      $http.get('/products.json').success(function (data) {
+      $http.get('/api/product').success(function (data) {
           store.products = data;
       })
   }]);
