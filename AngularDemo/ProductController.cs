@@ -4,6 +4,8 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Web.Http;
+using System.Configuration;
+using System.Data.SqlClient;
 
 namespace AngularDemo
 {
@@ -12,50 +14,91 @@ namespace AngularDemo
         // GET api/<controller>
         public IEnumerable<Product> Get()
         {
-            return new Product[] {
-                new Product() {
-                    Name = "Dodecahedron",
-                    Price = 2.95m,
-                    Description = "Some gems have qualities beyond their lustre, beyond their shine.  Dodecahedron is one of those gems.",
-                    CanPurchase = true,
-                    SoldOut = false,
-                    Images = new Image[]
+            List<Product> products = new List<Product>();
+
+            string connectionString = ConfigurationManager.ConnectionStrings["gems"].ConnectionString;
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            {
+                connection.Open();
+
+                using (SqlCommand command = connection.CreateCommand())
+                {
+                    command.CommandText = "SELECT * FROM Product";
+
+                    using (SqlDataReader reader = command.ExecuteReader())
                     {
-                        new Image
+                        while(reader.Read())
                         {
-                            Full = "dodecahedron.png",
-                            Thumb = "dodecahedron_thumb.png"
-                        },
-                        new Image
-                        {
-                            Full = "dodecahedron2.jpg",
-                            Thumb = "dodecahedron2_thumb.jpg"
-                        }
-                    },
-                    Reviews = new Review[]
-                    {
-                        new Review
-                        {
-                            Stars = 5,
-                            Body = "I love this product",
-                            Author = "joe@thomas.com"
-                        },
-                        new Review
-                        {
-                            Stars = 1,
-                            Body = "This product isn't even real",
-                            Author = "tim@hater.com"
+                            
+
+                            Product p = new Product();
+
+                            int ID = reader.GetInt32(reader.GetOrdinal("ID"));
+
+
+
+                            int position = reader.GetOrdinal("CanPurchase");
+                            p.CanPurchase = reader.GetBoolean(position);
+
+                            position = reader.GetOrdinal("Description");
+                            p.Description = reader.GetString(position);
+
+                            position = reader.GetOrdinal("Name");
+                            p.Name = reader.GetString(position);
+
+                            position = reader.GetOrdinal("Price");
+                            p.Price = reader.GetDecimal(position);
+
+                            position = reader.GetOrdinal("SoldOut");
+                            p.SoldOut = reader.GetBoolean(position);
+
+                            using (SqlCommand imagesCommand = connection.CreateCommand())
+                            {
+                                List<Image> images = new List<Image>();
+                                imagesCommand.CommandText = string.Format("SELECT * FROM Image WHERE ProductID = {0}", ID);
+                                using(SqlDataReader imageReader = imagesCommand.ExecuteReader())
+                                {
+                                    while (imageReader.Read())
+                                    {
+                                        Image i = new Image();
+                                        i.Full = imageReader.GetString(imageReader.GetOrdinal("Full"));
+                                        i.Thumb = imageReader.GetString(imageReader.GetOrdinal("Thumb"));
+                                        images.Add(i);
+                                    }
+                                }
+                                p.Images = images.ToArray();
+                            }
+
+
+                            using (SqlCommand reviewsCommand = connection.CreateCommand())
+                            {
+                                List<Review> reviews = new List<Review>();
+                                reviewsCommand.CommandText = string.Format("SELECT * FROM Review WHERE ProductID = {0}", ID);
+                                using (SqlDataReader reviewsReader = reviewsCommand.ExecuteReader())
+                                {
+                                    while (reviewsReader.Read())
+                                    {
+                                        Review r = new Review();
+                                        r.Author = reviewsReader.GetString(reviewsReader.GetOrdinal("Author"));
+                                        r.Body = reviewsReader.GetString(reviewsReader.GetOrdinal("Body"));
+                                        r.Stars = reviewsReader.GetInt32(reviewsReader.GetOrdinal("Stars"));
+                                        reviews.Add(r);
+                                    }
+                                }
+                                p.Reviews = reviews.ToArray();
+                            }
+
+                            products.Add(p);
                         }
                     }
-                },
-                new Product() {
-                    Name = "Pentagonal",
-                    Price = 5.95m,
-                    Description = "I am a gem shaped as a pentagon",
-                    CanPurchase = true,
-                    SoldOut = false
                 }
-            };
+
+
+                connection.Close();
+            }
+
+            return products;
+            
         }
         
     }
