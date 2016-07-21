@@ -101,5 +101,40 @@ namespace AngularDemo
             
         }
         
+        [HttpPost]
+        public void Review(ProductReview r)
+        {
+            string connectionString = ConfigurationManager.ConnectionStrings["gems"].ConnectionString;
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            {
+                int? productId = null;
+
+                connection.Open();
+                using(SqlCommand command = connection.CreateCommand())
+                {
+                    command.CommandText = string.Format("SELECT ID FROM Product WHERE Name = '{0}'", r.Name);
+
+                    productId = command.ExecuteScalar() as int?;
+
+                }
+
+                using (SqlCommand command = connection.CreateCommand())
+                {
+                    command.CommandText = string.Format(
+                        "INSERT INTO Review(AUTHOR, Body, Stars, ProductID) VALUES('{0}', '{1}', {2}, {3})",
+                        r.Author, r.Body, r.Stars, productId);
+
+                    command.ExecuteNonQuery();
+                }
+
+                    connection.Close();
+            }
+            Console.WriteLine(r.Author);
+        }
+
+        public class ProductReview : Review
+        {
+            public string Name { get; set; }
+        }
     }
 }

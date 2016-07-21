@@ -9,11 +9,16 @@
       })
   }]);
 
-  module.controller('ReviewController', function ($scope) {
+  module.controller('ReviewController', ['$http', function($http, $scope) {
       this.review = {};
 
       this.addReview = function (product) {
+          var data = this.review;
+          data.name = product.name;
+
+          $http.post('/api/product/review', data);
+
           product.reviews.push(this.review)
           this.review = {};
       }
-  });
+  }]);
